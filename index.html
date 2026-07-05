@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard de Investigadores</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo-dot"></span>
+      <h1>Instituto Superior Tecnológico Particular Sudamericano</h1>
+    </div>
+    <nav class="nav">
+      <a href="#overview">Resumen</a>
+      <a href="#ranking">Ranking</a>
+      <a href="#publicaciones">Publicaciones</a>
+      <a href="#proyectos">Proyectos</a>
+    </nav>
+    <div id="changeBadge" class="change-badge" style="display:none" title="Actualizaciones detectadas">0</div>
+    <button id="refreshBtn" class="btn-refresh" title="Actualizar datos">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+    </button>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-text">
+        <h2>Información de Investigación e Innovación</h2>
+        <p>La investigación y la innovación en la educación superior son fundamentales porque generan nuevo conocimiento, impulsan el desarrollo socioeconómico y aseguran una educación actualizada.</p>
+      </div>
+      <div id="lastUpdate" class="last-update">Sincronizando…</div>
+    </section>
+
+    <!-- Error banner (oculto por defecto) -->
+    <div id="errorBanner" class="error-banner" style="display:none">
+      <strong>⚠ No se pudo cargar el sheet.</strong>
+      <span id="errorMsg"></span>
+    </div>
+
+    <!-- KPI CARDS con iconos -->
+    <section id="overview" class="kpi-grid">
+      <div class="kpi" data-color="1">
+        <div class="kpi-head">
+          <span class="kpi-label">Investigadores</span>
+          <span class="kpi-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </span>
+        </div>
+        <span id="kpi-investigadores" class="kpi-value">—</span>
+        <span class="kpi-sub">Total registrados</span>
+      </div>
+      <div class="kpi" data-color="2">
+        <div class="kpi-head">
+          <span class="kpi-label">Activos</span>
+          <span class="kpi-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </span>
+        </div>
+        <span id="kpi-activos" class="kpi-value">—</span>
+        <span class="kpi-sub">Con publicaciones</span>
+      </div>
+      <div class="kpi" data-color="3">
+        <div class="kpi-head">
+          <span class="kpi-label">Publicaciones</span>
+          <span class="kpi-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </span>
+        </div>
+        <span id="kpi-publicaciones" class="kpi-value">—</span>
+        <span class="kpi-sub">Total acumulado</span>
+      </div>
+      <div class="kpi" data-color="4">
+        <div class="kpi-head">
+          <span class="kpi-label">Proyectos I+D+i</span>
+          <span class="kpi-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </span>
+        </div>
+        <span id="kpi-proyectos" class="kpi-value">—</span>
+        <span class="kpi-sub">Presentados</span>
+      </div>
+    </section>
+
+    <!-- CHARTS -->
+    <section class="charts-grid">
+      <article class="card">
+        <header class="card-head">
+          <h3>Top investigadores</h3>
+          <span class="hint">por publicaciones + proyectos</span>
+        </header>
+        <div class="chart-wrap">
+          <canvas id="chartRanking"></canvas>
+        </div>
+      </article>
+
+      <article class="card">
+        <header class="card-head">
+          <h3>Publicaciones por año</h3>
+          <span class="hint">total acumulado 2023–2027</span>
+        </header>
+        <div class="chart-wrap">
+          <canvas id="chartPubAnio"></canvas>
+        </div>
+      </article>
+
+      <article class="card">
+        <header class="card-head">
+          <h3>Proyectos por año</h3>
+          <span class="hint">investigadores activos</span>
+        </header>
+        <div class="chart-wrap">
+          <canvas id="chartProyAnio"></canvas>
+        </div>
+      </article>
+
+      <article class="card">
+        <header class="card-head">
+          <h3>Investigadores por Proyectos I+D+i</h3>
+          <span class="hint">más recurrentes</span>
+        </header>
+        <div class="chart-wrap">
+          <canvas id="chartProyDist"></canvas>
+        </div>
+      </article>
+    </section>
+
+    <!-- RANKING TABLE -->
+    <section id="ranking" class="card table-card">
+      <header class="card-head">
+        <h3>Ranking de Investigadores 2026</h3>
+        <input id="searchInput" type="search" placeholder="🔍 Buscar por nombre o proyecto…" />
+      </header>
+      <div class="table-wrap">
+        <table id="rankingTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Investigador</th>
+              <th class="num">Publicaciones</th>
+              <th class="num">Proyectos</th>
+              <th class="num">Pub. 2026</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TOP BARS -->
+    <section id="publicaciones" class="card table-card">
+      <header class="card-head">
+        <h3>Top 10 · Publicaciones</h3>
+        <span class="hint">acumulado 2023–2027</span>
+      </header>
+      <div class="bars" id="barsPublicaciones"></div>
+    </section>
+
+    <section id="proyectos" class="card table-card">
+      <header class="card-head">
+        <h3>Top 10 · Proyectos</h3>
+        <span class="hint">cantidad de proyectos</span>
+      </header>
+      <div class="bars" id="barsProyectos"></div>
+    </section>
+
+    <!-- DETALLE DE PROYECTOS -->
+    <section class="card table-card">
+      <header class="card-head">
+        <h3>Proyectos por investigador</h3>
+        <span class="hint">detalle completo</span>
+      </header>
+      <div id="proyectosDetalle" class="detail-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Información actualiza en tiempo real por datos presentados por la Coordinación de Investigación e Innovación, y las evidencias presentadas por cada docente Investigador.</p>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
